@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>400</width>
+                <height>600</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Student Database</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QVBoxLayout" name="verticalLayout">
+
+                <!-- Register Button -->
+                <item>
+                    <widget class="QPushButton" name="registerButton">
+                        <property name="text">
+                            <string>Register Student</string>
+                        </property>
+                    </widget>
+                </item>
+
+                <!-- Search Button -->
+                <item>
+                    <widget class="QPushButton" name="searchButton">
+                        <property name="text">
+                            <string>Search Student</string>
+                        </property>
+                    </widget>
+                </item>
+
+                <!-- Register Form -->
+                <item>
+                    <widget class="QWidget" name="registerForm">
+                        <layout class="QFormLayout" name="registerFormLayout">
+
+                            <item row="0" column="0">
+                                <widget class="QLineEdit" name="firstNameInput">
+                                    <property name="placeholderText">
+                                        <string>First Name</string>
+                                    </property>
+                                </widget>
+                            </item>
+
+                            <item row="1" column="0">
+                                <widget class="QLineEdit" name="lastNameInput">
+                                    <property name="placeholderText">
+                                        <string>Last Name</string>
+                                    </property>
+                                </widget>
+                            </item>
+
+                            <item row="2" column="0">
+                                <widget class="QLineEdit" name="phoneInput">
+                                    <property name="placeholderText">
+                                        <string>Phone Number</string>
+                                    </property>
+                                </widget>
+                            </item>
+
+                            <item row="3" column="0">
+                                <widget class="QLineEdit" name="groupInput">
+                                    <property name="placeholderText">
+                                        <string>Group Name</string>
+                                    </property>
+                                </widget>
+                            </item>
+
+                            <item row="4" column="0">
+                                <widget class="QPushButton" name="addStudentButton">
+                                    <property name="text">
+                                        <string>Add Student</string>
+                                    </property>
+                                </widget>
+                            </item>
+
+                        </layout>
+                    </widget>
+                </item>
+
+                <!-- Search Form -->
+                <item>
+                    <widget class="QWidget" name="searchForm">
+                        <layout class="QFormLayout" name="formLayout">
+                            <item row="0" column="0">
+                                <widget class="QLineEdit" name="searchFirstNameInput">
+                                    <property name="placeholderText">
+                                        <string>Enter First Name</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item row="1" column="0">
+                                <widget class="QLineEdit" name="searchLastNameInput">
+                                    <property name="placeholderText">
+                                        <string>Enter Last Name</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item row="2" column="0">
+                                <widget class="QComboBox" name="groupCombo"/>
+                            </item>
+                        </layout>
+                    </widget>
+                </item>
+
+                <!-- Results Table -->
+                <item>
+                    <widget class="QTableWidget" name="resultsTable">
+                        <property name="columnCount">
+                            <number>4</number>
+                        </property>
+                        <property name="rowCount">
+                            <number>0</number>
+                        </property>
+                        <column>
+                            <property name="text">
+                                <string>ID</string>
+                            </property>
+                        </column>
+                        <column>
+                            <property name="text">
+                                <string>First Name</string>
+                            </property>
+                        </column>
+                        <column>
+                            <property name="text">
+                                <string>Last Name</string>
+                            </property>
+                        </column>
+                        <column>
+                            <property name="text">
+                                <string>Phone Number</string>
+                            </property>
+                        </column>
+                    </widget>
+                </item>
+
+
+                <item>
+                    <widget class="QPushButton" name="resetButton">
+                        <property name="text">
+                            <string>Reset Filters</string>
+                        </property>
+                    </widget>
+                </item>
+
+                <item>
+                    <widget class="QPushButton" name="deleteButton">
+                        <property name="text">
+                            <string>Удалить выбранных</string>
+                        </property>
+                    </widget>
+                </item>
+
+                <!-- Pagination -->
+                <item>
+                    <widget class="QWidget" name="paginationWidget">
+                        <layout class="QHBoxLayout" name="paginationLayout">
+                            <item>
+                                <widget class="QPushButton" name="prevPageButton">
+                                    <property name="text">
+                                        <string>← Prev</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="nextPageButton">
+                                    <property name="text">
+                                        <string>Next →</string>
+                                    </property>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                </item>
+
+            </layout>
+        </widget>
+    </widget>
+    <resources/>
+    <connections/>
+</ui>

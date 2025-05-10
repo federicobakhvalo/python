@@ -10,7 +10,7 @@ class Calculator(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self._init_db()
-        self.load_styles(Path('./styles/calculator.qss'))
+        self.load_styles(Path('../styles/calculator.qss'))
         self.load_history()
         self.ui.btnAdd.clicked.connect(self.add)
         self.ui.btnSub.clicked.connect(self.sub)
