@@ -104,6 +104,14 @@
                             <item row="2" column="0">
                                 <widget class="QComboBox" name="groupCombo"/>
                             </item>
+                            <item row="3" column="0">
+                                <widget class="QPushButton" name="searchStudentButton">
+                                    <property name="text">
+                                        <string>Search</string>
+                                    </property>
+                                </widget>
+                            </item>
+
                         </layout>
                     </widget>
                 </item>

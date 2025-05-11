@@ -36,18 +36,31 @@ class StudentApp(QMainWindow):
         self.ui.registerButton.clicked.connect(self.show_register_form)
         self.ui.searchButton.clicked.connect(self.show_search_form)
         self.ui.addStudentButton.clicked.connect(self.add_student)
-        self.ui.deleteButton.clicked.connect(self.delete_students)  # кнопка удаления студентов
+        self.ui.deleteButton.clicked.connect(self.delete_students)
+        self.ui.searchStudentButton.clicked.connect(self.search_students)
+
         #
         # # Скрыть кнопку удаления по умолчанию
         self.ui.deleteButton.setVisible(False)
+
         #
         # # Подключаем чекбоксы
         #self.ui.resultsTable.itemChanged.connect(self.check_checkbox_status)
+        self.ui.searchStudentButton.setDisabled(True)
+        self.ui.searchFirstNameInput.textChanged.connect(self.update_search_button_state)
+        self.ui.searchLastNameInput.textChanged.connect(self.update_search_button_state)
+        self.ui.groupCombo.currentTextChanged.connect(self.update_search_button_state)
+
+        # Начальная проверка
+        self.update_search_button_state()
 
         # Кнопка сброса фильтров
         self.resetButton = QPushButton("Сбросить фильтр")
         self.resetButton.clicked.connect(self.reset_filters)
         self.ui.verticalLayout.addWidget(self.resetButton)
+
+
+
 
         # Кнопки пагинации
         self.pagination_widget = QWidget()
@@ -63,6 +76,27 @@ class StudentApp(QMainWindow):
         self.ui.verticalLayout.addWidget(self.pagination_widget)
 
         self.load_students_page(1)
+        self.load_groups()
+
+
+    def load_groups(self):
+        self.ui.groupCombo.clear()
+        self.ui.groupCombo.addItem("")
+
+        self.db.execute("SELECT DISTINCT group_name FROM students")
+        groups = self.db.fetchall()
+        for group in groups:
+            self.ui.groupCombo.addItem(group[0])
+
+    def update_search_button_state(self):
+        first_name = self.ui.searchFirstNameInput.text().strip()
+        last_name = self.ui.searchLastNameInput.text().strip()
+        group_name = self.ui.groupCombo.currentText().strip()
+
+        if first_name or last_name or group_name:
+            self.ui.searchStudentButton.setEnabled(True)
+        else:
+            self.ui.searchStudentButton.setDisabled(True)
 
     def delete_students(self):
         # Получаем выбранные строки из таблицы
@@ -186,33 +220,96 @@ class StudentApp(QMainWindow):
         except Exception as e:
             print(f"Error adding student to table: {e}")
 
+
+    def search_query(self,first_name,last_name,group):
+        conditions = []
+        values = []
+        debug_parts = []
+
+        if first_name:
+            conditions.append("LOWER(first_name) LIKE ?")
+            values.append(f"%{first_name}%")
+            debug_parts.append(f'first name I like "%{first_name}%"')
+
+        if last_name:
+            conditions.append("LOWER(last_name) LIKE ?")
+            values.append(f"%{last_name}%")
+            debug_parts.append(f'last name I like "%{last_name}%"')
+
+        if group:
+            conditions.append("group_name LIKE ?")
+            values.append(f"%{group}%")
+            debug_parts.append(f'group I like "%{group}%"')
+
+        if not conditions:
+            # Ничего не вводили — просто выходим
+            return
+
+        # Можно вывести отладочную строку запроса:
+        print("Searching for:", " and ".join(debug_parts))
+
+        where_clause = " AND ".join(conditions)
+        query = f"SELECT * FROM students WHERE {where_clause}"
+        return query,values
+
     def search_students(self):
-        first_name = self.ui.searchFirstNameInput.text()
-        last_name = self.ui.searchLastNameInput.text()
-        #group_name = self.ui.groupCombo.currentText()
+        first_name = self.ui.searchFirstNameInput.text().strip()
+        last_name = self.ui.searchLastNameInput.text().strip()
+        group_name = self.ui.groupCombo.currentText().strip()
+        query,values=self.search_query(first_name,last_name,group_name)
+        try:
+            self.db.execute(query, values)
+            table=self.ui.resultsTable
+            results = self.db.fetchall()
+            if results:
+                self.render_students_table(results)
+            else:
+                table.clearContents()
+                table.setRowCount(1)
+                table.setColumnCount(table.columnCount())  # сохраняем кол-во колонок
 
-        self.db.execute("""
-            SELECT * FROM students
-            WHERE first_name LIKE ? AND last_name LIKE ? AND group_name LIKE ?
-        """, (f"%{first_name}%", f"%{last_name}%", f"%{group_name}%"))
+                # Сообщение по центру всей строки
+                item = QTableWidgetItem("Ничего не найдено.")
+                # item.setTextAlignment(Qt.AlignCenter)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled) # только для отображения
 
-        results = self.db.fetchall()
-        self.render_students_table(results)
-        self.is_search_mode = True
+                # Вставляем сообщение в первую колонку
+                table.setItem(0, 0, item)
+
+                # Убираем заголовки, если нужно:
+                table.setHorizontalHeaderLabels([""] * table.columnCount())
+                table.verticalHeader().setVisible(False)
+            self.is_search_mode = True
+
+        except Exception as E:
+
+            print(str(E))
+
+
 
     def reset_filters(self):
-        self.ui.searchFirstNameInput.clear()
-        self.ui.searchLastNameInput.clear()
-        self.ui.groupCombo.setCurrentIndex(0)
-        self.load_students_page(1)
-        self.is_search_mode = False
+        if self.is_search_mode:
+            try:
+                self.ui.searchFirstNameInput.clear()
+                self.ui.searchLastNameInput.clear()
+                self.ui.groupCombo.setCurrentIndex(0)
+                self.load_students_page(1)
+            except Exception as E:
+                print(str(E))
+            self.is_search_mode=False
+
 
     def load_students_page(self, page):
-        offset = (page - 1) * self.STUDENTS_PER_PAGE
-        self.db.execute("SELECT * FROM students LIMIT ? OFFSET ?", (self.STUDENTS_PER_PAGE, offset))
-        students = self.db.fetchall()
-        self.render_students_table(students)
-        self.current_page = page
+        try:
+            offset = (page - 1) * self.STUDENTS_PER_PAGE
+            self.db.execute("SELECT * FROM students LIMIT ? OFFSET ?", (self.STUDENTS_PER_PAGE, offset))
+            students = self.db.fetchall()
+            print(students)
+            self.render_students_table(students)
+            self.current_page = page
+        except Exception as e:
+            print("Ошибка в load_students_page:", e)
+
 
     def prev_page(self):
         if not self.is_search_mode and self.current_page > 1:
@@ -228,26 +325,24 @@ class StudentApp(QMainWindow):
             self.load_students_page(self.current_page + 1)
 
     def render_students_table(self, students):
-        # Устанавливаем количество строк и столбцов
         self.ui.resultsTable.setRowCount(len(students))
-        self.ui.resultsTable.setColumnCount(6)  # Один дополнительный столбец для чекбоксов
-        self.ui.resultsTable.setHorizontalHeaderLabels(
-            ["Выбрать", "ID", "Имя", "Фамилия", "Телефон", "Группа"]  # Заголовки столбцов на русском
-        )
+        self.ui.resultsTable.setColumnCount(6)
+        self.ui.resultsTable.setHorizontalHeaderLabels(["Выбрать", "ID", "Имя", "Фамилия", "Телефон", "Группа"])
 
-        # Перебираем список студентов и заполняем таблицу
+        try:
+            self.ui.resultsTable.itemChanged.disconnect()
+        except TypeError:
+            pass
+
         for row, student in enumerate(students):
-            # Добавляем чекбокс в первый столбец
             checkbox_item = QTableWidgetItem()
-            # Применяем флаг ItemIsUserCheckable для чекбокса
-            checkbox_item.setFlags(checkbox_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)  # Используем правильный флаг
+            checkbox_item.setFlags(checkbox_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             checkbox_item.setCheckState(Qt.CheckState.Unchecked)
-          # Устанавливаем начальное состояние чекбокса (не отмечен)
-            self.ui.resultsTable.setItem(row, 0, checkbox_item)  # Добавляем чекбокс в таблицу в первый столбец
+            self.ui.resultsTable.setItem(row, 0, checkbox_item)
 
-            # Заполняем данные о студенте в остальных столбцах
-            for col, value in enumerate(student, start=1):  # Начиная с второго столбца (index 1)
+            for col, value in enumerate(student, start=1):
                 self.ui.resultsTable.setItem(row, col, QTableWidgetItem(str(value)))
+
         self.ui.resultsTable.itemChanged.connect(self.check_checkbox_status)
 
 
